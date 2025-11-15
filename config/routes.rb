@@ -8,9 +8,27 @@ Rails.application.routes.draw do
   # API routes
   namespace :api do
     namespace :v1 do
-      resources :characters, only: [:index, :show]
-      resources :costumes, only: [:index]
+      resources :characters, only: [:index, :show] do
+        member do
+          post 'optimize'
+        end
+      end
+      resources :costumes, only: [:index, :show] do
+        member do
+          get 'effects'
+          post 'unequip_all'
+          post 'apply_configuration'
+        end
+      end
       resources :memories, only: [:index]
+      resources :slots, only: [] do
+        member do
+          post 'equip'
+          post 'unequip'
+          post 'level_up'
+          post 'level_down'
+        end
+      end
     end
   end
 
