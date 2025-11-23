@@ -74,6 +74,7 @@ class CostumeOptimizer
       costume_id: costume.id,
       costume_name: costume.name,
       rarity: costume.rarity,
+      star_level: costume.star_level,
       character_name: costume.character.name,
       score: score,
       configuration: best_configuration[:slots],

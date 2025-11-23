@@ -21,7 +21,11 @@ Rails.application.routes.draw do
           post "apply_configuration"
         end
       end
-      resources :memories, only: [ :index ]
+      resources :memories, only: [ :index ] do
+        collection do
+          get "special_skills"
+        end
+      end
       resources :slots, only: [] do
         member do
           post "equip"
