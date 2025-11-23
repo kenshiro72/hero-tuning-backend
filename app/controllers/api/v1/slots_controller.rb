@@ -1,8 +1,20 @@
 class Api::V1::SlotsController < ApplicationController
   # POST /api/v1/slots/:id/equip
   def equip
-    slot = Slot.find(params[:id])
-    memory = Memory.find(params[:memory_id])
+    slot_id = validate_id_parameter(params[:id])
+    # N+1クエリ対策: costume.characterとcostume.slotsをeager load
+    slot = Slot.includes(costume: [:character, :slots]).find(slot_id)
+
+    # Strong Parametersを使用してパラメータをホワイトリスト化
+    equip_params_data = equip_params
+    memory_id_param = equip_params_data[:memory_id]
+
+    # memory_idをバリデーション
+    return render json: { error: "memory_id is required" }, status: :bad_request unless memory_id_param.present?
+
+    memory_id = validate_id_parameter(memory_id_param)
+    # N+1クエリ対策: memory.characterをeager load
+    memory = Memory.includes(:character).find(memory_id)
 
     unless slot.can_equip?(memory)
       # 詳細なエラーメッセージを生成
@@ -16,8 +28,8 @@ class Api::V1::SlotsController < ApplicationController
         error_message << "Class不一致"
       end
 
-      costume_character_base = slot.costume.character.name.split('（').first
-      memory_character_base = memory.character.name.split('（').first
+      costume_character_base = slot.costume.character.name.split("（").first
+      memory_character_base = memory.character.name.split("（").first
       if costume_character_base == memory_character_base
         error_message << "自分自身のメモリーは装備できません"
       end
@@ -28,7 +40,7 @@ class Api::V1::SlotsController < ApplicationController
       end
 
       return render json: {
-        error: error_message.join('、'),
+        error: error_message.join("、"),
         details: {
           slot_role: slot.role,
           slot_class: slot.slot_class,
@@ -52,7 +64,8 @@ class Api::V1::SlotsController < ApplicationController
 
   # POST /api/v1/slots/:id/unequip
   def unequip
-    slot = Slot.find(params[:id])
+    slot_id = validate_id_parameter(params[:id])
+    slot = Slot.find(slot_id)
 
     if slot.unequip_memory
       render json: {
@@ -66,7 +79,8 @@ class Api::V1::SlotsController < ApplicationController
 
   # POST /api/v1/slots/:id/level_up
   def level_up
-    slot = Slot.find(params[:id])
+    slot_id = validate_id_parameter(params[:id])
+    slot = Slot.find(slot_id)
 
     if slot.level_up
       render json: {
@@ -80,7 +94,8 @@ class Api::V1::SlotsController < ApplicationController
 
   # POST /api/v1/slots/:id/level_down
   def level_down
-    slot = Slot.find(params[:id])
+    slot_id = validate_id_parameter(params[:id])
+    slot = Slot.find(slot_id)
 
     if slot.level_down
       render json: {
@@ -90,5 +105,38 @@ class Api::V1::SlotsController < ApplicationController
     else
       render json: { error: "これ以上レベルダウンできません" }, status: :unprocessable_entity
     end
+  end
+
+  # POST /api/v1/slots/:id/set_level
+  # 一度に特定レベルに設定（パフォーマンス最適化）
+  def set_level
+    slot_id = validate_id_parameter(params[:id])
+    slot = Slot.find(slot_id)
+
+    target_level = params[:level].to_i
+
+    # レベルのバリデーション
+    unless target_level.between?(1, slot.max_level)
+      return render json: {
+        error: "Invalid level",
+        current_level: slot.current_level,
+        max_level: slot.max_level,
+        requested_level: target_level
+      }, status: :bad_request
+    end
+
+    # レベルを直接設定
+    slot.update!(current_level: target_level)
+
+    render json: {
+      message: "レベルを#{target_level}に設定しました",
+      slot: slot
+    }
+  end
+
+  private
+
+  def equip_params
+    params.permit(:memory_id)
   end
 end

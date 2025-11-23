@@ -1,6 +1,6 @@
 class Slot < ApplicationRecord
   belongs_to :costume
-  belongs_to :equipped_memory, class_name: 'Memory', optional: true
+  belongs_to :equipped_memory, class_name: "Memory", optional: true
 
   # メモリーが装備可能かどうかを判定
   def can_equip?(memory)
@@ -14,8 +14,8 @@ class Slot < ApplicationRecord
 
     # 選択しているキャラクター自身のメモリーは装着できない
     # キャラクター名の基本部分で比較（例：「緑谷出久（オリジナル）」→「緑谷出久」）
-    costume_character_base_name = costume.character.name.split('（').first
-    memory_character_base_name = memory.character.name.split('（').first
+    costume_character_base_name = costume.character.name.split("（").first
+    memory_character_base_name = memory.character.name.split("（").first
     return false if costume_character_base_name == memory_character_base_name
 
     # 同じコスチュームに同じメモリーを装着できない

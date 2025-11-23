@@ -8,25 +8,27 @@ Rails.application.routes.draw do
   # API routes
   namespace :api do
     namespace :v1 do
-      resources :characters, only: [:index, :show] do
+      resources :characters, only: [ :index, :show ] do
         member do
-          post 'optimize'
+          post "optimize"
+          get "with_variants"  # バリアントを含めた詳細情報を一度に取得
         end
       end
-      resources :costumes, only: [:index, :show] do
+      resources :costumes, only: [ :index, :show ] do
         member do
-          get 'effects'
-          post 'unequip_all'
-          post 'apply_configuration'
+          get "effects"
+          post "unequip_all"
+          post "apply_configuration"
         end
       end
-      resources :memories, only: [:index]
+      resources :memories, only: [ :index ]
       resources :slots, only: [] do
         member do
-          post 'equip'
-          post 'unequip'
-          post 'level_up'
-          post 'level_down'
+          post "equip"
+          post "unequip"
+          post "level_up"
+          post "level_down"
+          post "set_level"  # 一度に特定レベルに設定
         end
       end
     end

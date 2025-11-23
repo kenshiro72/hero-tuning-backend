@@ -20,7 +20,7 @@ end
 def calculate_normal_slot_max_level(slot_class)
   if slot_class.nil?
     3  # Classなし → max_level: 3
-  elsif ['HERO', 'VILLAIN'].include?(slot_class)
+  elsif [ 'HERO', 'VILLAIN' ].include?(slot_class)
     4  # Class指定あり → max_level: 4
   else
     3  # デフォルト

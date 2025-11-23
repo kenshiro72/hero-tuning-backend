@@ -7,10 +7,21 @@
 
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    origins "localhost:3000"
+    # 環境変数を使用してオリジンを設定（セキュリティ向上）
+    # 開発環境: http://localhost:3000
+    # 本番環境: 環境変数 FRONTEND_URL で設定
+    origins ENV.fetch("FRONTEND_URL", "http://localhost:3000")
 
-    resource "*",
-      headers: :any,
-      methods: [:get, :post, :put, :patch, :delete, :options, :head]
+    resource "/api/v1/*",
+      # 必要なヘッダーのみ許可
+      headers: %w[Content-Type Accept Authorization X-Requested-With X-CSRF-Token],
+      # 実際に使用されているHTTPメソッドのみ許可（セキュリティ向上）
+      # 現在: GET（読み取り）、POST（状態変更）のみ使用
+      # 将来的に必要になった場合: :put, :patch, :delete を追加
+      methods: [ :get, :post, :options, :head ],
+      # クレデンシャル（Cookie）を含むリクエストを許可する場合は true
+      credentials: false,
+      # プリフライトリクエストのキャッシュ時間（秒）
+      max_age: 600
   end
 end

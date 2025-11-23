@@ -1,26 +1,26 @@
-require 'csv'
+require "csv"
 
 class TuningSkillCalculator
   # チューニングスキルデータを読み込み
   def self.skill_data
     @skill_data ||= begin
-      csv_path = Rails.root.join('db', 'チューニングスキルのレベル別効果.csv')
+      csv_path = Rails.root.join("db", "チューニングスキルのレベル別効果.csv")
       data = {}
 
-      CSV.foreach(csv_path, headers: true, encoding: 'UTF-8') do |row|
-        skill_name = row['チューニングスキル名']
-        effects_str = row['チューニングレベルごとの効果量']
+      CSV.foreach(csv_path, headers: true, encoding: "UTF-8") do |row|
+        skill_name = row["チューニングスキル名"]
+        effects_str = row["チューニングレベルごとの効果量"]
 
         # "level1:1,level2:2,level3:3,level4:4" のような文字列をパース
         effects = {}
-        effects_str.split(',').each do |pair|
-          level, value = pair.split(':')
-          level_num = level.gsub('level', '').to_i
+        effects_str.split(",").each do |pair|
+          level, value = pair.split(":")
+          level_num = level.gsub("level", "").to_i
           effects[level_num] = value.to_f
         end
 
         data[skill_name] = {
-          description: row['効果'],
+          description: row["効果"],
           effects: effects
         }
       end
@@ -32,23 +32,23 @@ class TuningSkillCalculator
   # スペシャルチューニングスキルデータを読み込み
   def self.special_skill_data
     @special_skill_data ||= begin
-      csv_path = Rails.root.join('db', 'スペシャルチューニングスキルのレベル別効果.csv')
+      csv_path = Rails.root.join("db", "スペシャルチューニングスキルのレベル別効果.csv")
       data = {}
 
-      CSV.foreach(csv_path, headers: true, encoding: 'UTF-8') do |row|
-        skill_name = row['スペシャルチューニングスキル名']
-        effects_str = row['チューニングレベルごとの効果量']
+      CSV.foreach(csv_path, headers: true, encoding: "UTF-8") do |row|
+        skill_name = row["スペシャルチューニングスキル名"]
+        effects_str = row["チューニングレベルごとの効果量"]
 
         # "level1:1.1,level2:1.2,..." のような文字列をパース
         effects = {}
-        effects_str.split(',').each do |pair|
-          level, value = pair.split(':')
-          level_num = level.gsub('level', '').to_i
+        effects_str.split(",").each do |pair|
+          level, value = pair.split(":")
+          level_num = level.gsub("level", "").to_i
           effects[level_num] = value.to_f
         end
 
         data[skill_name] = {
-          description: row['効果'],
+          description: row["効果"],
           effects: effects
         }
       end
@@ -65,12 +65,12 @@ class TuningSkillCalculator
     level = slot.current_level
 
     # Normal Slotの場合はtuning_skill、Special Slotの場合はspecial_tuning_skillを使用
-    skills_text = if slot.slot_type == 'Normal'
+    skills_text = if slot.slot_type == "Normal"
                     memory.tuning_skill
-                  else
+    else
                     # Special slotはステータスに影響しないが、スキル名だけ返す
                     return { special_skill: memory.special_tuning_skill }
-                  end
+    end
 
     return {} if skills_text.nil?
 
@@ -96,26 +96,26 @@ class TuningSkillCalculator
 
   # 倍率系スキル（掛け算で合算）のリスト
   MULTIPLICATIVE_SKILLS = [
-    '対HP攻撃力＋',
-    '対GP攻撃力＋',
+    "対HP攻撃力＋",
+    "対GP攻撃力＋",
     '"個性"技α攻撃力＋',
     '"個性"技β攻撃力＋',
     '"個性"技γ攻撃力＋',
-    '格闘攻撃力＋',
-    'HP防御力＋',
+    "格闘攻撃力＋",
+    "HP防御力＋",
     '対"個性"技α防御力＋',
     '対"個性"技β防御力＋',
     '対"個性"技γ防御力＋',
-    '対格闘攻撃防御力＋',
-    '走り速度＋',
-    'ダッシュ速度＋',
-    '壁移動速度＋',
-    '瀕死移動速度＋',
+    "対格闘攻撃防御力＋",
+    "走り速度＋",
+    "ダッシュ速度＋",
+    "壁移動速度＋",
+    "瀕死移動速度＋",
     '"個性"技αリロード＋',
     '"個性"技βリロード＋',
     '"個性"技γリロード＋',
-    '特殊アクションリロード＋',
-    'PU/PCリロード＋'
+    "特殊アクションリロード＋",
+    "PU/PCリロード＋"
   ]
 
   # フィクサーの倍率を取得
@@ -125,14 +125,14 @@ class TuningSkillCalculator
     multipliers = {}
 
     # スペシャルスロットをチェック
-    costume.slots.where(slot_type: 'Special').each do |slot|
+    costume.slots.where(slot_type: "Special").each do |slot|
       next unless slot.equipped_memory.present?
 
       # フィクサーが装備されているか確認
       special_skill = slot.equipped_memory.special_tuning_skill
-      if special_skill == 'フィクサー'
+      if special_skill == "フィクサー"
         # フィクサーの倍率を取得（スペシャルスロットのmax_levelを使用）
-        multiplier = special_skill_data['フィクサー'][:effects][slot.max_level]
+        multiplier = special_skill_data["フィクサー"][:effects][slot.max_level]
 
         # スペシャルスロット1（slot_number=11）→ノーマルスロット1～5
         # スペシャルスロット2（slot_number=12）→ノーマルスロット6～10
@@ -165,7 +165,7 @@ class TuningSkillCalculator
       end
 
       # ノーマルスロットの場合、フィクサーの倍率を適用
-      if slot.slot_type == 'Normal' && fixer_multipliers[slot.slot_number]
+      if slot.slot_type == "Normal" && fixer_multipliers[slot.slot_number]
         multiplier = fixer_multipliers[slot.slot_number]
         slot_effects.each do |skill_name, effect_data|
           if MULTIPLICATIVE_SKILLS.include?(skill_name)
