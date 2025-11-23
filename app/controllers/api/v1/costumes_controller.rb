@@ -1,6 +1,11 @@
 class Api::V1::CostumesController < ApplicationController
+  # TODO: 認証実装時に認可チェックを追加
+  # - 全てのアクションでユーザー所有のコスチュームかチェック
+  # - IDOR脆弱性対策として、costume.character.user_id == current_user.id を確認
+
   # GET /api/v1/costumes
   def index
+    # TODO: current_user.costumes に変更
     @costumes = Costume.all.includes(:character, :slots)
     render json: @costumes.as_json(
       include: {
@@ -13,6 +18,7 @@ class Api::V1::CostumesController < ApplicationController
   # GET /api/v1/costumes/:id
   def show
     costume_id = validate_id_parameter(params[:id])
+    # TODO: 認可チェック - costume.character.user == current_user
     costume = Costume.includes(slots: { equipped_memory: :character }).find(costume_id)
 
     render json: costume.as_json(

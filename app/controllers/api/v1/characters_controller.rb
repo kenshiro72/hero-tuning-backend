@@ -1,11 +1,20 @@
 class Api::V1::CharactersController < ApplicationController
+  # TODO: 認証実装時に認可チェックを追加
+  # - 現在は全ユーザーが全データにアクセス可能
+  # - 将来的にユーザー所有のキャラクターのみアクセス可能にすること
+  # - IDOR (Insecure Direct Object Reference) 脆弱性に注意
+
   def index
+    # TODO: ログインユーザーのキャラクターのみ取得するように変更
+    # 例: @characters = current_user.characters
     @characters = Character.all
     render json: @characters
   end
 
   def show
     character_id = validate_id_parameter(params[:id])
+    # TODO: 認可チェック - このキャラクターがcurrent_userに属するか確認
+    # 例: authorize @character (Punditを使用する場合)
     @character = Character.includes(costumes: { slots: { equipped_memory: :character } }, memory: {}).find(character_id)
     render json: @character.as_json(
       include: {

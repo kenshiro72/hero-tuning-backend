@@ -192,14 +192,17 @@ class CostumeOptimizer
       end
 
       # 各メモリーを試してスコアを計算
+      # メモリ最適化: ハッシュコピーの代わりに値を一時的に変更
       best_memory = nil
       best_score = 0
+      original_memory_id = slot_assignments[slot.id]
 
       compatible_memories.each do |memory|
-        # 仮の構成でスコアを計算
-        temp_assignments = slot_assignments.dup
-        temp_assignments[slot.id] = memory.id
-        temp_effects = calculate_effects_for_assignments(costume, temp_assignments, all_memories)
+        # 一時的に割り当てを変更
+        slot_assignments[slot.id] = memory.id
+
+        # スコアを計算
+        temp_effects = calculate_effects_for_assignments(costume, slot_assignments, all_memories)
         temp_score = calculate_score(temp_effects, target_skills)
 
         if temp_score > best_score
@@ -208,7 +211,8 @@ class CostumeOptimizer
         end
       end
 
-      slot_assignments[slot.id] = best_memory.id if best_memory
+      # 最適なメモリーを設定（見つからなければ元の値を維持）
+      slot_assignments[slot.id] = best_memory ? best_memory.id : original_memory_id
     end
 
     # 最終的な効果を計算
@@ -315,10 +319,24 @@ class CostumeOptimizer
 
   def self.calculate_effects_for_assignments(costume, assignments, all_memories)
     total_effects = {}
-
-    # フィクサーの倍率を計算
     fixer_multipliers = {}
-    costume.slots.where(slot_type: "Special").each do |slot|
+
+    # 最適化: 単一パスで全スロットを処理
+    # 1. まずSpecialスロットを処理してフィクサー倍率を収集
+    # 2. 次にNormalスロットの効果を計算
+    special_slots = []
+    normal_slots = []
+
+    costume.slots.each do |slot|
+      if slot.slot_type == "Special"
+        special_slots << slot
+      else
+        normal_slots << slot
+      end
+    end
+
+    # フィクサーの倍率を計算（Specialスロットのみ）
+    special_slots.each do |slot|
       memory_id = assignments[slot.id]
       next unless memory_id
 
@@ -341,18 +359,14 @@ class CostumeOptimizer
       end
     end
 
-    # 各スロットの効果を計算
-    costume.slots.each do |slot|
+    # Normalスロットの効果を計算
+    normal_slots.each do |slot|
       memory_id = assignments[slot.id]
       next unless memory_id
 
       memory = all_memories.find { |m| m.id == memory_id }
       next unless memory
 
-      # Specialスロットはスキップ
-      next if slot.slot_type == "Special"
-
-      # Normalスロットの効果を計算
       skills_text = memory.tuning_skill
       next if skills_text.nil?
 
