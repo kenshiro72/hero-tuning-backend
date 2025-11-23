@@ -39,7 +39,9 @@ class Api::V1::CharactersController < ApplicationController
     # 同じベース名を持つすべてのキャラクターを取得（N+1クエリ対策）
     # ベース名と完全一致、またはベース名の後に「（」が続くもののみ取得
     # これにより「緑谷出久」と「緑谷出久 OFA」を区別できる
-    variants = Character.where("name = ? OR name LIKE ?", base_name, "#{base_name}（%")
+    # LIKE特殊文字（%、_）をエスケープしてSQL injectionを防止
+    escaped_base_name = Character.sanitize_sql_like(base_name)
+    variants = Character.where("name = ? OR name LIKE ?", base_name, "#{escaped_base_name}（%")
                        .includes(costumes: { slots: { equipped_memory: :character } }, memory: {})
 
     # すべてのバリアントのコスチュームとメモリーを統合

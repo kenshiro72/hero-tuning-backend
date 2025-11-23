@@ -124,9 +124,9 @@ class ApplicationController < ActionController::API
       "Origin: #{request.headers['Origin']}, Referer: #{request.headers['Referer']}"
     )
 
-    render json: {
-      error: Rails.env.production? ? "Request verification failed" : "CSRF protection failed"
-    }, status: :forbidden
+    # 例外を発生させてリクエスト処理を停止
+    # rescue_fromでキャッチされ、適切なエラーレスポンスが返される
+    raise ActionController::InvalidAuthenticityToken, "CSRF protection failed"
   end
 
   # Origin/Refererヘッダーの検証
