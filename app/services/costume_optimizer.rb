@@ -59,8 +59,8 @@ class CostumeOptimizer
   end
 
   def self.optimize_costume(costume, target_skills, special_slot_1_skill = nil, special_slot_2_skill = nil, special_filter_mode = "none")
-    # 全メモリーを取得
-    all_memories = Memory.all.to_a
+    # 全メモリーを取得（N+1クエリ防止のためcharacterを事前ロード）
+    all_memories = Memory.includes(:character).to_a
 
     # 最適なメモリー構成を見つける（貪欲法）
     best_configuration = find_best_configuration(costume, all_memories, target_skills, special_slot_1_skill, special_slot_2_skill, special_filter_mode)
@@ -326,7 +326,13 @@ class CostumeOptimizer
       next unless memory
 
       if memory.special_tuning_skill == "フィクサー"
-        multiplier = TuningSkillCalculator.special_skill_data["フィクサー"][:effects][slot.max_level]
+        # CSVデータの存在チェック
+        fixer_data = TuningSkillCalculator.special_skill_data["フィクサー"]
+        next unless fixer_data && fixer_data[:effects]
+
+        multiplier = fixer_data[:effects][slot.max_level]
+        next unless multiplier
+
         if slot.slot_number == 11
           (1..5).each { |n| fixer_multipliers[n] = multiplier }
         elsif slot.slot_number == 12
@@ -355,7 +361,7 @@ class CostumeOptimizer
 
       skills.each do |skill_name|
         skill_info = TuningSkillCalculator.skill_data[skill_name]
-        next unless skill_info
+        next unless skill_info && skill_info[:effects]
 
         effect_value = skill_info[:effects][level]
         next unless effect_value

@@ -5,24 +5,51 @@ class TuningSkillCalculator
   def self.skill_data
     @skill_data ||= begin
       csv_path = Rails.root.join("db", "チューニングスキルのレベル別効果.csv")
+
+      # ファイルの存在確認
+      unless File.exist?(csv_path)
+        Rails.logger.error "[CSV Error] Skill data file not found: #{csv_path}"
+        return {}
+      end
+
       data = {}
 
-      CSV.foreach(csv_path, headers: true, encoding: "UTF-8") do |row|
-        skill_name = row["チューニングスキル名"]
-        effects_str = row["チューニングレベルごとの効果量"]
+      begin
+        CSV.foreach(csv_path, headers: true, encoding: "UTF-8") do |row|
+          # 必須カラムの検証
+          skill_name = row["チューニングスキル名"]
+          effects_str = row["チューニングレベルごとの効果量"]
 
-        # "level1:1,level2:2,level3:3,level4:4" のような文字列をパース
-        effects = {}
-        effects_str.split(",").each do |pair|
-          level, value = pair.split(":")
-          level_num = level.gsub("level", "").to_i
-          effects[level_num] = value.to_f
+          unless skill_name.present? && effects_str.present?
+            Rails.logger.warn "[CSV Warning] Skipping row with missing data in skill data CSV"
+            next
+          end
+
+          # "level1:1,level2:2,level3:3,level4:4" のような文字列をパース
+          effects = {}
+          effects_str.split(",").each do |pair|
+            level, value = pair.split(":")
+            next unless level && value
+
+            level_num = level.gsub("level", "").to_i
+            effects[level_num] = value.to_f
+          end
+
+          # 効果が空の場合はスキップ
+          next if effects.empty?
+
+          data[skill_name] = {
+            description: row["効果"] || "",
+            effects: effects
+          }
         end
-
-        data[skill_name] = {
-          description: row["効果"],
-          effects: effects
-        }
+      rescue CSV::MalformedCSVError => e
+        Rails.logger.error "[CSV Error] Malformed CSV in skill data: #{e.message}"
+        return {}
+      rescue => e
+        Rails.logger.error "[CSV Error] Failed to parse skill data: #{e.message}"
+        Rails.logger.error e.backtrace.join("\n")
+        return {}
       end
 
       data
@@ -33,24 +60,51 @@ class TuningSkillCalculator
   def self.special_skill_data
     @special_skill_data ||= begin
       csv_path = Rails.root.join("db", "スペシャルチューニングスキルのレベル別効果.csv")
+
+      # ファイルの存在確認
+      unless File.exist?(csv_path)
+        Rails.logger.error "[CSV Error] Special skill data file not found: #{csv_path}"
+        return {}
+      end
+
       data = {}
 
-      CSV.foreach(csv_path, headers: true, encoding: "UTF-8") do |row|
-        skill_name = row["スペシャルチューニングスキル名"]
-        effects_str = row["チューニングレベルごとの効果量"]
+      begin
+        CSV.foreach(csv_path, headers: true, encoding: "UTF-8") do |row|
+          # 必須カラムの検証
+          skill_name = row["スペシャルチューニングスキル名"]
+          effects_str = row["チューニングレベルごとの効果量"]
 
-        # "level1:1.1,level2:1.2,..." のような文字列をパース
-        effects = {}
-        effects_str.split(",").each do |pair|
-          level, value = pair.split(":")
-          level_num = level.gsub("level", "").to_i
-          effects[level_num] = value.to_f
+          unless skill_name.present? && effects_str.present?
+            Rails.logger.warn "[CSV Warning] Skipping row with missing data in special skill data CSV"
+            next
+          end
+
+          # "level1:1.1,level2:1.2,..." のような文字列をパース
+          effects = {}
+          effects_str.split(",").each do |pair|
+            level, value = pair.split(":")
+            next unless level && value
+
+            level_num = level.gsub("level", "").to_i
+            effects[level_num] = value.to_f
+          end
+
+          # 効果が空の場合はスキップ
+          next if effects.empty?
+
+          data[skill_name] = {
+            description: row["効果"] || "",
+            effects: effects
+          }
         end
-
-        data[skill_name] = {
-          description: row["効果"],
-          effects: effects
-        }
+      rescue CSV::MalformedCSVError => e
+        Rails.logger.error "[CSV Error] Malformed CSV in special skill data: #{e.message}"
+        return {}
+      rescue => e
+        Rails.logger.error "[CSV Error] Failed to parse special skill data: #{e.message}"
+        Rails.logger.error e.backtrace.join("\n")
+        return {}
       end
 
       data

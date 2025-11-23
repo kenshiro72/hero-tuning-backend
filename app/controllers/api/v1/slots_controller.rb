@@ -77,48 +77,31 @@ class Api::V1::SlotsController < ApplicationController
     end
   end
 
-  # POST /api/v1/slots/:id/level_up
-  def level_up
-    slot_id = validate_id_parameter(params[:id])
-    slot = Slot.find(slot_id)
-
-    if slot.level_up
-      render json: {
-        message: "レベルアップしました",
-        slot: slot
-      }
-    else
-      render json: { error: "これ以上レベルアップできません" }, status: :unprocessable_entity
-    end
-  end
-
-  # POST /api/v1/slots/:id/level_down
-  def level_down
-    slot_id = validate_id_parameter(params[:id])
-    slot = Slot.find(slot_id)
-
-    if slot.level_down
-      render json: {
-        message: "レベルダウンしました",
-        slot: slot
-      }
-    else
-      render json: { error: "これ以上レベルダウンできません" }, status: :unprocessable_entity
-    end
-  end
-
   # POST /api/v1/slots/:id/set_level
   # 一度に特定レベルに設定（パフォーマンス最適化）
   def set_level
     slot_id = validate_id_parameter(params[:id])
     slot = Slot.find(slot_id)
 
-    target_level = params[:level].to_i
+    # levelパラメータの存在確認
+    unless params[:level].present?
+      return render json: { error: "level parameter is required" }, status: :bad_request
+    end
 
-    # レベルのバリデーション
+    # levelパラメータの型検証（正の整数であることを確認）
+    begin
+      target_level = validate_id_parameter(params[:level])
+    rescue ArgumentError => e
+      return render json: {
+        error: "Invalid level format: must be a positive integer",
+        details: e.message
+      }, status: :bad_request
+    end
+
+    # レベルの範囲バリデーション
     unless target_level.between?(1, slot.max_level)
       return render json: {
-        error: "Invalid level",
+        error: "Level out of range",
         current_level: slot.current_level,
         max_level: slot.max_level,
         requested_level: target_level

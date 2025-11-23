@@ -102,6 +102,14 @@ class ApplicationController < ActionController::API
   end
 
   # === CSRF保護メソッド ===
+  #
+  # 現在のCSRF保護戦略:
+  # - API専用モード（セッションレス）のため、カスタムヘッダーベースの保護を使用
+  # - フロントエンドは全リクエストに X-Requested-With: XMLHttpRequest を送信
+  # - ブラウザの同一生成元ポリシーにより、他ドメインからこのヘッダーを設定不可
+  # - 将来的に認証を実装する場合は、CSRFトークンベースの保護を追加すること
+  #
+  # 注意: withCredentials: true にする場合は、valid_csrf_token? を有効化すること
 
   # 状態変更リクエストかどうかを判定
   def state_changing_request?
@@ -110,7 +118,10 @@ class ApplicationController < ActionController::API
 
   # リクエストが検証済みかどうかを判定
   def verified_request?
-    # 複数の検証方法をサポート
+    # 複数の検証方法をサポート（いずれか1つが成功すればOK）
+    # 1. Originヘッダー検証（CORS）
+    # 2. カスタムヘッダー検証（X-Requested-With）← 現在の主要な保護
+    # 3. CSRFトークン検証（将来の認証実装用）
     valid_origin_header? || valid_custom_header? || valid_csrf_token?
   end
 

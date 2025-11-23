@@ -79,6 +79,10 @@ class Costume < ApplicationRecord
   end
 
   # コスチュームをシリーズ順にソート
+  # IMPORTANT: このスコープはRuby側でソートを行うため、:characterアソシエーションを
+  # eager loadする必要があります。includes(:character)を必ず使用してください。
+  # series_orderメソッドがcharacter.character_classにアクセスするため、
+  # eager loadしないとN+1クエリが発生します。
   scope :ordered_by_series, -> {
     includes(:character).sort_by { |costume| [costume.series_order, costume.id] }
   }

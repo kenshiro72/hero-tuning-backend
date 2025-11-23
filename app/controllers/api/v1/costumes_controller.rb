@@ -89,40 +89,48 @@ class Api::V1::CostumesController < ApplicationController
       return render json: { error: "configuration must be a hash" }, status: :bad_request
     end
 
-    # 全スロットを解除
-    costume.slots.update_all(equipped_memory_id: nil)
+    # トランザクション内で全ての更新を実行
+    # 途中で失敗した場合は全てロールバック
+    ActiveRecord::Base.transaction do
+      # 全スロットを解除
+      costume.slots.update_all(equipped_memory_id: nil)
 
-    # N+1クエリ対策: 必要なmemoriesを一度に取得
-    memory_ids = configuration.values.map { |id| validate_id_parameter(id) }
-    memories = Memory.where(id: memory_ids).index_by(&:id)
+      # N+1クエリ対策: 必要なmemoriesを一度に取得
+      memory_ids = configuration.values.map { |id| validate_id_parameter(id) }
+      memories = Memory.where(id: memory_ids).index_by(&:id)
 
-    # slotsをハッシュ化してアクセスを高速化
-    slots_by_id = costume.slots.index_by(&:id)
+      # slotsをハッシュ化してアクセスを高速化
+      slots_by_id = costume.slots.index_by(&:id)
 
-    # 新しい構成を適用
-    configuration.each do |slot_id_param, memory_id_param|
-      # IDパラメータをバリデーション
-      slot_id = validate_id_parameter(slot_id_param)
-      memory_id = validate_id_parameter(memory_id_param)
+      # 新しい構成を適用
+      configuration.each do |slot_id_param, memory_id_param|
+        # IDパラメータをバリデーション
+        slot_id = validate_id_parameter(slot_id_param)
+        memory_id = validate_id_parameter(memory_id_param)
 
-      slot = slots_by_id[slot_id]
-      memory = memories[memory_id]
+        slot = slots_by_id[slot_id]
+        memory = memories[memory_id]
 
-      unless slot && memory
-        return render json: { error: "Invalid slot_id or memory_id" }, status: :bad_request
+        unless slot && memory
+          # トランザクションをロールバックするため例外を発生
+          raise ActiveRecord::RecordNotFound, "Invalid slot_id or memory_id"
+        end
+
+        unless slot.can_equip?(memory)
+          # トランザクションをロールバックするため例外を発生
+          raise ActiveRecord::RecordInvalid.new(slot), "Cannot equip memory #{memory_id} to slot #{slot_id}"
+        end
+
+        slot.update!(equipped_memory_id: memory_id)
       end
-
-      unless slot.can_equip?(memory)
-        return render json: { error: "Cannot equip memory #{memory_id} to slot #{slot_id}" }, status: :unprocessable_entity
-      end
-
-      slot.update!(equipped_memory_id: memory_id)
     end
 
     render json: {
       message: "構成を適用しました",
       costume_id: costume.id
     }
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { error: e.message }, status: :unprocessable_entity
   end
 
   private

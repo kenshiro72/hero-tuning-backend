@@ -30,8 +30,6 @@ Rails.application.routes.draw do
         member do
           post "equip"
           post "unequip"
-          post "level_up"
-          post "level_down"
           post "set_level"  # 一度に特定レベルに設定
         end
       end

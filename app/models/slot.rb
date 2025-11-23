@@ -26,28 +26,16 @@ class Slot < ApplicationRecord
   end
 
   # メモリーを装備
+  # @return [Boolean] 装備成功時はtrue、失敗時はfalse
   def equip_memory(memory)
-    raise "Cannot equip this memory to this slot" unless can_equip?(memory)
+    return false unless can_equip?(memory)
 
-    update!(equipped_memory: memory)
+    update(equipped_memory: memory)
   end
 
   # メモリーを解除
+  # @return [Boolean] 解除成功時はtrue、失敗時はfalse
   def unequip_memory
-    update!(equipped_memory: nil)
-  end
-
-  # スロットのレベルアップ
-  def level_up
-    return false if current_level >= max_level
-
-    update!(current_level: current_level + 1)
-  end
-
-  # スロットのレベルダウン
-  def level_down
-    return false if current_level <= 1
-
-    update!(current_level: current_level - 1)
+    update(equipped_memory: nil)
   end
 end
