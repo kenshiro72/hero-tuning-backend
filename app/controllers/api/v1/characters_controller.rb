@@ -58,6 +58,9 @@ class Api::V1::CharactersController < ApplicationController
       end
     end
 
+    # コスチュームをシリーズ順にソート
+    all_costumes.sort_by! { |costume| [costume.series_order, costume.id] }
+
     # 統合されたレスポンスを返す
     render json: {
       id: character.id,
