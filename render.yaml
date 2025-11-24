@@ -1,0 +1,30 @@
+services:
+  # Rails API サービス
+  - type: web
+    name: hero-tuning-api
+    runtime: ruby
+    plan: free  # 無料プラン（初期テスト用）。本番運用時は 'starter' に変更
+    buildCommand: "./bin/render-build.sh"
+    startCommand: "bundle exec puma -C config/puma.rb"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: hero-tuning-db
+          property: connectionString
+      - key: RAILS_ENV
+        value: production
+      - key: RAILS_MASTER_KEY
+        sync: false  # Render Dashboard で手動設定が必要
+      - key: FRONTEND_URL
+        value: https://your-app.vercel.app  # Vercelデプロイ後に更新
+      - key: RAILS_LOG_TO_STDOUT
+        value: enabled
+      - key: RAILS_SERVE_STATIC_FILES
+        value: enabled
+
+databases:
+  # PostgreSQL データベース
+  - name: hero-tuning-db
+    plan: free  # 無料プラン（初期テスト用）。本番運用時は 'starter' に変更
+    databaseName: hero_tuning_production
+    user: hero_tuning_user

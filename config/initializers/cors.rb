@@ -8,9 +8,14 @@
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
     # 環境変数を使用してオリジンを設定（セキュリティ向上）
-    # 開発環境: http://localhost:3000
-    # 本番環境: 環境変数 FRONTEND_URL で設定
-    origins ENV.fetch("FRONTEND_URL", "http://localhost:3000")
+    # 複数のオリジンをカンマ区切りで指定可能
+    # 例: FRONTEND_URL=https://app.example.com,https://staging.example.com
+    allowed_origins = ENV.fetch("FRONTEND_URL", "http://localhost:3000").split(',').map(&:strip)
+
+    # 開発環境では localhost:3001 も追加で許可
+    allowed_origins << "http://localhost:3001" if Rails.env.development?
+
+    origins allowed_origins
 
     resource "/api/v1/*",
       # 必要なヘッダーのみ許可

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_23_050212) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_24_022700) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -24,6 +24,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_23_050212) do
     t.integer "gamma_damage"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_characters_on_name"
   end
 
   create_table "costumes", force: :cascade do |t|
@@ -57,8 +58,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_23_050212) do
     t.integer "max_level"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "equipped_memory_id"
+    t.bigint "equipped_memory_id"
     t.integer "current_level", default: 1, null: false
+    t.index ["costume_id", "slot_number"], name: "index_slots_on_costume_id_and_slot_number", unique: true
     t.index ["costume_id"], name: "index_slots_on_costume_id"
     t.index ["equipped_memory_id"], name: "index_slots_on_equipped_memory_id"
   end

@@ -48,10 +48,13 @@ class Api::V1::CharactersController < ApplicationController
     # 同じベース名を持つすべてのキャラクターを取得（N+1クエリ対策）
     # ベース名と完全一致、またはベース名の後に「（」が続くもののみ取得
     # これにより「緑谷出久」と「緑谷出久 OFA」を区別できる
-    # LIKE特殊文字（%、_）をエスケープしてSQL injectionを防止
-    escaped_base_name = Character.sanitize_sql_like(base_name)
-    variants = Character.where("name = ? OR name LIKE ?", escaped_base_name, "#{escaped_base_name}（%")
-                       .includes(costumes: { slots: { equipped_memory: :character } }, memory: {})
+    # Arelを使用してタイプセーフなクエリを構築
+    table = Character.arel_table
+    variants = Character.where(
+      table[:name].eq(base_name).or(
+        table[:name].matches("#{Character.sanitize_sql_like(base_name)}（%")
+      )
+    ).includes(costumes: { slots: { equipped_memory: :character } }, memory: {})
 
     # すべてのバリアントのコスチュームとメモリーを統合
     all_costumes = []
