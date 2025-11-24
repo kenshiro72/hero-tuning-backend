@@ -14,12 +14,13 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
 
     resource "/api/v1/*",
       # 必要なヘッダーのみ許可
-      headers: %w[Content-Type Accept Authorization X-Requested-With X-CSRF-Token],
+      headers: %w[Content-Type Accept Authorization],
       # 実際に使用されているHTTPメソッドのみ許可（セキュリティ向上）
       # 現在: GET（読み取り）、POST（状態変更）のみ使用
       # 将来的に必要になった場合: :put, :patch, :delete を追加
       methods: [ :get, :post, :options, :head ],
       # クレデンシャル（Cookie）を含むリクエストを許可する場合は true
+      # 現在は認証なしのため false
       credentials: false,
       # プリフライトリクエストのキャッシュ時間（秒）
       max_age: 600
