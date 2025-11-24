@@ -1,39 +1,4 @@
 class CostumeOptimizer
-  # プリセット定義
-  PRESETS = {
-    "耐久力特化" => [
-      "最大HP＋",
-      "最大GP＋",
-      "HP防御力＋",
-      '対"個性"技α防御力＋',
-      '対"個性"技β防御力＋',
-      '対"個性"技γ防御力＋',
-      "対格闘攻撃防御力＋"
-    ],
-    "α攻撃力特化" => [
-      "対HP攻撃力＋",
-      "対GP攻撃力＋",
-      '"個性"技α攻撃力＋'
-    ],
-    "β攻撃力特化" => [
-      "対HP攻撃力＋",
-      "対GP攻撃力＋",
-      '"個性"技β攻撃力＋'
-    ],
-    "γ攻撃力特化" => [
-      "対HP攻撃力＋",
-      "対GP攻撃力＋",
-      '"個性"技γ攻撃力＋'
-    ],
-    "全攻撃力特化" => [
-      "対HP攻撃力＋",
-      "対GP攻撃力＋",
-      '"個性"技α攻撃力＋',
-      '"個性"技β攻撃力＋',
-      '"個性"技γ攻撃力＋'
-    ]
-  }.freeze
-
   def self.optimize(character, custom_skills:, special_slot_1_skill: nil, special_slot_2_skill: nil, special_filter_mode: "none")
     # カスタムスキルは必須
     raise "custom_skills must be provided" unless custom_skills && custom_skills.any?
@@ -222,6 +187,10 @@ class CostumeOptimizer
       slots: slot_assignments.map do |slot_id, memory_id|
         slot = costume.slots.find(slot_id)
         memory = all_memories.find { |m| m.id == memory_id }
+
+        # memoryがnilの場合はスキップ
+        next unless memory
+
         {
           slot_id: slot_id,
           slot_number: slot.slot_number,
@@ -231,7 +200,7 @@ class CostumeOptimizer
           skill: slot.slot_type == "Normal" ? memory.tuning_skill : memory.special_tuning_skill,
           role: memory.role
         }
-      end,
+      end.compact,
       effects: final_effects
     }
   end

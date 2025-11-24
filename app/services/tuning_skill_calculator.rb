@@ -179,24 +179,38 @@ class TuningSkillCalculator
     multipliers = {}
 
     # スペシャルスロットをチェック
-    costume.slots.where(slot_type: "Special").each do |slot|
+    # 注意: .where() を使うと新しいDBクエリが実行されて一時的な equipped_memory が失われるため、
+    # 必ず .select を使ってメモリ上のコレクションをフィルタリングする
+    special_slots = costume.slots.to_a.select { |s| s.slot_type == "Special" }
+
+    special_slots.each do |slot|
       next unless slot.equipped_memory.present?
 
       # フィクサーが装備されているか確認
       special_skill = slot.equipped_memory.special_tuning_skill
+      Rails.logger.debug "[FIXER DEBUG] Slot #{slot.slot_number}: special_skill=#{special_skill.inspect}, current_level=#{slot.current_level}"
+
       if special_skill == "フィクサー"
-        # フィクサーの倍率を取得（スペシャルスロットのmax_levelを使用）
-        multiplier = special_skill_data["フィクサー"][:effects][slot.max_level]
+        # フィクサーの倍率を取得（スペシャルスロットのcurrent_levelを使用）
+        multiplier = special_skill_data["フィクサー"][:effects][slot.current_level]
+        Rails.logger.debug "[FIXER DEBUG] Fixer found! slot_number=#{slot.slot_number}, current_level=#{slot.current_level}, multiplier=#{multiplier}"
+
+        # multiplierがnilの場合はスキップ
+        next unless multiplier
 
         # スペシャルスロット1（slot_number=11）→ノーマルスロット1～5
         # スペシャルスロット2（slot_number=12）→ノーマルスロット6～10
         if slot.slot_number == 11
           (1..5).each { |n| multipliers[n] = multiplier }
+          Rails.logger.debug "[FIXER DEBUG] Applied multiplier #{multiplier} to slots 1-5"
         elsif slot.slot_number == 12
           (6..10).each { |n| multipliers[n] = multiplier }
+          Rails.logger.debug "[FIXER DEBUG] Applied multiplier #{multiplier} to slots 6-10"
         end
       end
     end
+
+    Rails.logger.debug "[FIXER DEBUG] Final multipliers: #{multipliers.inspect}"
 
     multipliers
   end
@@ -209,7 +223,7 @@ class TuningSkillCalculator
     # フィクサーの倍率を取得
     fixer_multipliers = get_fixer_multipliers(costume)
 
-    costume.slots.includes(:equipped_memory).each do |slot|
+    costume.slots.each do |slot|
       slot_effects = calculate_slot_effect(slot)
 
       # Special skillsは別で管理

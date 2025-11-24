@@ -65,6 +65,60 @@ class Api::V1::CostumesController < ApplicationController
     }
   end
 
+  # POST /api/v1/costumes/:id/calculate_effects
+  # ローカル状態のスロット構成で効果を計算（DB保存なし）
+  def calculate_effects
+    costume_id = validate_id_parameter(params[:id])
+    costume = Costume.includes(:slots).find(costume_id)
+
+    # リクエストボディからスロット構成を取得
+    slots_config = params[:slots] || []
+
+    # スロットごとのメモリーIDマップを作成
+    memory_ids = slots_config.filter_map { |slot_data| slot_data[:equipped_memory_id] }.compact
+    memories_by_id = Memory.where(id: memory_ids).includes(:character).index_by(&:id)
+
+    # 各スロットに一時的にメモリーを設定（DB保存なし）
+    costume.slots.each do |slot|
+      slot_data = slots_config.find { |s| s[:id] == slot.id }
+      next unless slot_data
+
+      # current_levelを一時的に設定
+      slot.current_level = slot_data[:current_level] if slot_data[:current_level]
+
+      # equipped_memoryを一時的に設定
+      if slot_data[:equipped_memory_id]
+        slot.equipped_memory = memories_by_id[slot_data[:equipped_memory_id]]
+      else
+        slot.equipped_memory = nil
+      end
+    end
+
+    # 効果を計算
+    effects_data = TuningSkillCalculator.calculate_costume_effects(costume)
+
+    # 効果を％表記に変換
+    formatted_effects = {}
+    effects_data[:tuning_effects].each do |skill_name, effect_data|
+      formatted_value = TuningSkillCalculator.format_effect_percentage(skill_name, effect_data[:value])
+      formatted_effects[skill_name] = {
+        description: effect_data[:description],
+        value: formatted_value
+      }
+    end
+
+    render json: {
+      costume: {
+        id: costume.id,
+        name: costume.name,
+        rarity: costume.rarity,
+        character: costume.character.name
+      },
+      tuning_effects: formatted_effects,
+      special_skills: effects_data[:special_skills]
+    }
+  end
+
   # POST /api/v1/costumes/:id/unequip_all
   def unequip_all
     costume_id = validate_id_parameter(params[:id])

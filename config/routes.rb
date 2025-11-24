@@ -17,6 +17,7 @@ Rails.application.routes.draw do
       resources :costumes, only: [ :index, :show ] do
         member do
           get "effects"
+          post "calculate_effects"  # ローカル状態のスロット構成で効果計算
           post "unequip_all"
           post "apply_configuration"
         end

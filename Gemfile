@@ -35,9 +35,6 @@ gem "thruster", require: false
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 gem "rack-cors"
 
-# Rate limiting and throttling for Rack applications
-gem "rack-attack"
-
 # CSV library for reading CSV files
 gem "csv"
 
