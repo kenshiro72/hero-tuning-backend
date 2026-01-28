@@ -27,3 +27,7 @@ No,コスチューム名,レアリティ,星,Normal Slot 1,Normal Slot 2,Normal 
 26,ヴィラン・パイレーツ,PUR,3,Strike,Support,Assault,Rapid(H),Technical(V),Assault,Rapid,Technical,Strike(H),Rapid(V),Technical,Assault(H)
 27,ヴィラン・パイレーツ〈ヒーローライク〉,PUR,3,Technical,Rapid,Support,Assault(H),Technical(H),Rapid,Strike,Strike,Strike(V),Support(V),Assault,Strike(V)
 28,サイバーパンク〈ファンシー〉,PUR,3,Strike,Assault,Support,Technical(H),Technical(H),Rapid,Technical,Technical,Support(V),Technical(V),Support,Rapid(H)
+29,スカル・ヴィラン,PUR,3,Technical,Rapid,Strike,Technical(H),Strike(H),Support,Support,Strike,Assault(V),Support(V),Strike,Technical(V)
+30,スカル・ヴィラン〈ヒーローライク〉,PUR,3,Assault,Rapid,Rapid,Strike(V),Assault(V),Technical,Rapid,Support,Technical(H),Assault(H),Support,Strike(H)
+31,スカル・ヴィラン〈コンバット〉,PUR,3,Strike,Support,Support,Technical(V),Strike(H),Rapid,Strike,Assault,Strike(H),Strike(V),Assault,Support(V)
+32,スカル・ヴィラン〈デンジャラス〉,PUR,3,Technical,Assault,Strike,Assault(H),Support(H),Rapid,Technical,Assault,Technical(V),Strike(V),Support,Strike(H)

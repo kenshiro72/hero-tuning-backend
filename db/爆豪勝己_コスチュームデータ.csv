@@ -90,3 +90,5 @@ No,コスチューム名,レアリティ,星,Normal Slot 1,Normal Slot 2,Normal 
 89,"""個性""アシストギア〈コンバット〉",PUR,3,Support,Assault,Rapid,Assault(H),Technical(H),Strike,Support,Strike,Technical(V),Support(V),Technical,Rapid(H)
 90,"""個性""アシストギア〈ファンシー〉",PUR,3,Assault,Rapid,Support,Strike(H),Technical(V),Support,Assault,Technical,Rapid(V),Technical(H),Rapid,Assault(V)
 91,"""個性""アシストギア〈デンジャラス〉",PUR,3,Technical,Assault,Technical,Assault(V),Rapid(H),Strike,Strike,Assault,Support(H),Rapid(V),Strike,Technical(H)
+92,私服,PUR,3,Rapid,Rapid,Assault,Strike(V),Support(H),Support,Strike,Support,Technical(H),Rapid(H),Technical,Rapid(V)
+93,私服〈コンバット〉,PUR,3,Support,Technical,Support,Strike(H),Assault(V),Support,Rapid,Support,Strike(V),Technical(H),Technical,Support(V)
